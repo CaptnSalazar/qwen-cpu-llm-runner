@@ -116,6 +116,27 @@ With a no-reasoning server already running, execute:
 
 The evaluator warms the model, sends three short direct-answer prompts with `temperature: 0`, streams responses, and reports first visible token time, total time, output, and exact-match correctness. See [docs/evaluation.md](docs/evaluation.md) for methodology and the recorded baseline.
 
+### Measured CPU latency baseline
+
+The following is the first measured local baseline for this project. It used the Qwen3-32B Q6_K model (26.9 GB) with the CPU-only llama.cpp `b10930` build, 31 threads, and a 16,384-token context on Windows 10 with 32 logical CPUs.
+
+| Direct-answer case | Total API completion latency |
+| --- | ---: |
+| Arithmetic | 73.56 s |
+| Geography | 67.80 s |
+| Number pattern | 73.69 s |
+| **Mean** | **71.68 s** |
+
+This is a conservative CPU-only reference, not a quality score: the server for that first run was still configured for automatic reasoning while each request was capped at four output tokens. It therefore emitted no visible final answer, and those three cases are **not scored for correctness**. Restart with `-NoReasoning` and use the included evaluator to produce a valid direct-answer result for your hardware. Keep model, quantization, context size, thread count, and backend in every published comparison.
+
+### Performance defaults
+
+The launcher uses all but one logical CPU by default, assigns the same count to prompt/batch processing, and lets llama.cpp automatically select Flash Attention when supported. It keeps the accuracy-first Q6 quantization and 16K context; both materially increase memory use and CPU latency. For faster local responses, use the Q4 preset and a smaller context:
+
+```powershell
+.\run.ps1 -Mode server -Model qwen3-32b-q4 -ContextSize 4096 -NoReasoning
+```
+
 ## Project layout
 
 ```text
