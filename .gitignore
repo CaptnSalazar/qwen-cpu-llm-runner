@@ -1,0 +1,10 @@
+# Downloaded runtimes and model weights are intentionally never versioned.
+runtime/
+models/*.gguf
+models/*.part
+logs/
+
+# Editor and PowerShell artifacts
+.vscode/
+*.tmp
+*.log

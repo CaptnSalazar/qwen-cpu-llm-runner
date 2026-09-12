@@ -1,0 +1,35 @@
+{
+  "default_model": "qwen3-32b-q6",
+  "models": {
+    "qwen3-32b-q6": {
+      "file": "Qwen3-32B-Q6_K.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen3-32B-GGUF/resolve/main/Qwen3-32B-Q6_K.gguf?download=true",
+      "sha256": "c4c7c3cb6da260df1fe1d3cfd090a32dc7cc348f1278158be18e301f390d6f6e",
+      "description": "Accuracy-first preset. Expect roughly 30 GB of RAM before context and operating-system overhead.",
+      "context_size": 16384,
+      "threads": 0,
+      "gpu_layers": "auto",
+      "temperature": 0.6,
+      "top_k": 20,
+      "top_p": 0.95,
+      "min_p": 0.0,
+      "presence_penalty": 1.5,
+      "repeat_penalty": 1.0
+    },
+    "qwen3-32b-q4": {
+      "file": "Qwen3-32B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen3-32B-GGUF/resolve/main/Qwen3-32B-Q4_K_M.gguf?download=true",
+      "sha256": "efd971561896866f0e910cce52761ca77b1b138090c7f15fe284676d57d1f689",
+      "description": "Lower-memory fallback. Expect roughly 22 GB of RAM before context and operating-system overhead.",
+      "context_size": 8192,
+      "threads": 0,
+      "gpu_layers": "auto",
+      "temperature": 0.6,
+      "top_k": 20,
+      "top_p": 0.95,
+      "min_p": 0.0,
+      "presence_penalty": 1.5,
+      "repeat_penalty": 1.0
+    }
+  }
+}

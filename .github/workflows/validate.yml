@@ -1,0 +1,31 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse PowerShell and model configuration
+        shell: pwsh
+        run: |
+          $files = @('run.ps1', 'scripts/install-llama-cpp.ps1', 'scripts/smoke-eval.ps1')
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors)
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error "${file}:$($_.Extent.StartLineNumber): $($_.Message)" }
+              exit 1
+            }
+          }
+          $config = Get-Content 'config/models.json' -Raw | ConvertFrom-Json
+          foreach ($preset in $config.models.PSObject.Properties) {
+            if ($preset.Value.sha256 -notmatch '^[a-fA-F0-9]{64}$') {
+              throw "Invalid SHA-256 for model preset $($preset.Name)."
+            }
+          }
