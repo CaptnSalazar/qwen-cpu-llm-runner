@@ -1,8 +1,40 @@
 # Qwen CPU LLM Runner
 
-A Windows-first, open-source launcher for running Qwen GGUF language models locally with [llama.cpp](https://github.com/ggml-org/llama.cpp). It installs a portable runtime, downloads verified weights, launches a local chat-completions API, and includes a reproducible latency smoke test.
+[![Validate](https://github.com/CaptnSalazar/qwen-cpu-llm-runner/actions/workflows/validate.yml/badge.svg)](https://github.com/CaptnSalazar/qwen-cpu-llm-runner/actions/workflows/validate.yml) [![License: MIT](https://img.shields.io/github/license/CaptnSalazar/qwen-cpu-llm-runner)](LICENSE) [![Issues](https://img.shields.io/github/issues/CaptnSalazar/qwen-cpu-llm-runner)](https://github.com/CaptnSalazar/qwen-cpu-llm-runner/issues)
+
+Run Qwen GGUF language models privately on Windows with CPU, CUDA, or Vulkan. This open-source launcher installs a portable [llama.cpp](https://github.com/ggml-org/llama.cpp) runtime, downloads verified weights, launches a local chat-completions API, and includes a reproducible latency smoke test.
 
 **Privacy-first:** the model and inference server run on your PC. The installer and downloader access upstream releases only to fetch the runtime and model you choose.
+
+## Contents
+
+- [Quick start](#quick-start)
+- [Choose a runtime backend](#choose-a-runtime-backend)
+- [Run modes](#run-modes)
+- [Models and tuning](#models-and-tuning)
+- [Evaluation](#evaluation)
+- [Project layout](#project-layout)
+- [Contributing and security](#contributing-and-security)
+
+## Choose your setup
+
+| Your hardware | Start with | Why |
+| --- | --- | --- |
+| CPU-only, 32 GB RAM | `qwen3-32b-q4` | Smaller download and memory footprint |
+| CPU-only, 48 GB+ RAM | `qwen3-32b-q6` | Highest shipped quality |
+| NVIDIA GPU | CUDA + Q4 or Q6 | GPU layer offload through a CUDA runtime |
+| AMD or Intel GPU | Vulkan + Q4 or Q6 | Broad accelerator support where Vulkan is available |
+
+The Q4 preset is the practical starting point for most machines. Move to Q6 when you have the memory headroom and want the best quality available in this repository.
+
+```mermaid
+flowchart LR
+	User[User] --> Runner[run.ps1]
+	Runner --> Model[Verified GGUF model]
+	Runner --> Server[llama.cpp server]
+	Server --> API[Local chat API]
+	API --> Client[Chat client or script]
+```
 
 ## Highlights
 
@@ -10,7 +42,7 @@ A Windows-first, open-source launcher for running Qwen GGUF language models loca
 - CPU-only, CUDA, and Vulkan runtime installation.
 - Local chat-completions endpoint at `127.0.0.1:8080`.
 - SHA-256 model validation after download.
-- Direct-answer (`--reasoning off`) mode for low-overhead tasks.
+- Direct-answer (`-NoReasoning`) mode for low-overhead tasks.
 - Reproducible streaming latency and correctness smoke evaluation.
 
 ## Requirements
@@ -27,11 +59,17 @@ Run these from the repository root in PowerShell:
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
 .\scripts\install-llama-cpp.ps1 -Backend cpu
-.\run.ps1 -Mode download -Model qwen3-32b-q6
+\.\run.ps1 -Mode download -Model qwen3-32b-q4
 .\run.ps1
 ```
 
-The first model load is intentionally slow on CPU: it maps a 26.9 GB model and creates its context cache.
+You should then see a local interactive chat prompt. For server mode, the useful endpoint is:
+
+```text
+http://127.0.0.1:8080/v1/chat/completions
+```
+
+The first model load is intentionally slow on CPU: it maps the model and creates its context cache. Use `qwen3-32b-q6` in the download command when you have the memory headroom for the larger preset.
 
 The installer defaults to the tested llama.cpp build `b10930` and verifies release-asset checksums when upstream provides them. Use `-Version latest` only when you are intentionally testing a newer upstream build.
 
@@ -164,3 +202,5 @@ tests/validate.ps1                Offline syntax and preset validation
 ## Contributing and security
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request and [SECURITY.md](SECURITY.md) before reporting a security issue. The launcher code is MIT licensed; llama.cpp and model weights are separate projects with their own licenses. Do not redistribute model weights without complying with their license.
+
+The project is maintained by [Yash Shukla (@CaptnSalazar)](AUTHORS.md).
