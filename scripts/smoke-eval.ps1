@@ -4,7 +4,9 @@ param(
     [string]$Model = "local-model",
     [ValidateRange(1, 10)]
     [int]$MaxTokens = 8,
-    [switch]$SkipWarmup
+    [switch]$SkipWarmup,
+    [string]$OutputDirectory = "",
+    [switch]$NoReport
 )
 
 Set-StrictMode -Version Latest
@@ -12,6 +14,9 @@ $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.Net.Http
 $BaseUrl = $BaseUrl.TrimEnd("/")
 $ChatEndpoint = "$BaseUrl/v1/chat/completions"
+$ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
+if ([string]::IsNullOrWhiteSpace($OutputDirectory)) { $OutputDirectory = Join-Path $ProjectRoot "benchmarks" }
+$startedAt = Get-Date
 
 function Invoke-StreamingChat([string]$Prompt) {
     $payload = @{
@@ -128,6 +133,26 @@ if ($completed.Count -gt 0) {
     $averageFirst = @($completed | Where-Object { $null -ne $_.FirstTokenMs } | ForEach-Object FirstTokenMs | Measure-Object -Average).Average
     $averageTotal = @($completed | ForEach-Object TotalMs | Measure-Object -Average).Average
     Write-Host ("[eval] Accuracy: {0}/{1} | avg first visible token: {2:N0} ms | avg total: {3:N0} ms" -f $passed, $results.Count, $averageFirst, $averageTotal) -ForegroundColor Green
+    if (-not $NoReport) {
+        New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
+        $report = [ordered]@{
+            schema_version = 1
+            started_at     = $startedAt.ToUniversalTime().ToString("o")
+            finished_at    = (Get-Date).ToUniversalTime().ToString("o")
+            endpoint       = $ChatEndpoint
+            max_tokens     = $MaxTokens
+            logical_cpus   = [Environment]::ProcessorCount
+            os_version     = [Environment]::OSVersion.VersionString
+            passed         = $passed
+            total_cases    = $results.Count
+            average_first_visible_token_ms = if ($null -eq $averageFirst) { $null } else { [math]::Round($averageFirst, 0) }
+            average_total_ms = [math]::Round($averageTotal, 0)
+            cases          = @($results)
+        }
+        $reportPath = Join-Path $OutputDirectory ("smoke-eval-{0}.json" -f $startedAt.ToString("yyyyMMdd-HHmmss"))
+        $report | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $reportPath -Encoding UTF8
+        Write-Host "[eval] Report: $reportPath" -ForegroundColor Cyan
+    }
 } else {
     Write-Host "[eval] No case completed. See errors above." -ForegroundColor Red
     exit 1

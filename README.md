@@ -33,6 +33,8 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 The first model load is intentionally slow on CPU: it maps a 26.9 GB model and creates its context cache.
 
+The installer defaults to the tested llama.cpp build `b10930` and verifies release-asset checksums when upstream provides them. Use `-Version latest` only when you are intentionally testing a newer upstream build.
+
 ### Choose a runtime backend
 
 ```powershell
@@ -70,6 +72,12 @@ Local server:
 
 The API is available at `http://127.0.0.1:8080/v1/chat/completions`. It binds to loopback by default. Do not use `-ListenAddress 0.0.0.0` unless you provide authentication and network controls separately.
 
+To require a bearer token, pass an API key when starting the server:
+
+```powershell
+.\run.ps1 -Mode server -ApiKey "replace-with-a-long-random-secret"
+```
+
 ### Direct-answer mode (no reasoning)
 
 For short, straightforward responses without reasoning tokens, stop the current server with `Ctrl+C` and start a new one:
@@ -104,6 +112,9 @@ Useful overrides:
 
 # Validate the installation and detected runtime
 .\run.ps1 -Mode doctor
+
+# Run the local smoke benchmark through the main launcher
+.\run.ps1 -Mode benchmark
 ```
 
 ## Evaluation
@@ -114,7 +125,7 @@ With a no-reasoning server already running, execute:
 .\scripts\smoke-eval.ps1
 ```
 
-The evaluator warms the model, sends three short direct-answer prompts with `temperature: 0`, streams responses, and reports first visible token time, total time, output, and exact-match correctness. See [docs/evaluation.md](docs/evaluation.md) for methodology and the recorded baseline.
+The evaluator warms the model, sends three short direct-answer prompts with `temperature: 0`, streams responses, and reports first visible token time, total time, output, and exact-match correctness. Each completed run is stored as a timestamped JSON file in `benchmarks/` (ignored by Git). See [docs/evaluation.md](docs/evaluation.md) for methodology and the recorded baseline.
 
 ### Measured CPU latency baseline
 
@@ -144,7 +155,9 @@ config/models.json                Shipped model presets and hashes
 run.ps1                           Chat, server, download, and diagnostic launcher
 scripts/install-llama-cpp.ps1     Portable llama.cpp installer
 scripts/smoke-eval.ps1            Local direct-answer latency smoke evaluation
+benchmarks/                       Local timestamped evaluation reports (ignored by Git)
 docs/evaluation.md                Methodology and measured baseline
+tests/validate.ps1                Offline syntax and preset validation
 .github/workflows/validate.yml    GitHub Actions syntax/configuration validation
 ```
 

@@ -11,7 +11,8 @@ $files = @('run.ps1', 'scripts/install-llama-cpp.ps1', 'scripts/smoke-eval.ps1')
 foreach ($file in $files) {
   $tokens = $null; $errors = $null
   [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors)
-  if ($errors.Count) { $errors | ForEach-Object Message; exit 1 }
+  $parseErrors = @($errors | Where-Object { $null -ne $_ })
+  if ($parseErrors.Count) { $parseErrors | ForEach-Object Message; exit 1 }
 }
 Get-Content .\config\models.json -Raw | ConvertFrom-Json | Out-Null
 ```

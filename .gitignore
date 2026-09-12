@@ -3,6 +3,7 @@ runtime/
 models/*.gguf
 models/*.part
 logs/
+benchmarks/*.json
 
 # Editor and PowerShell artifacts
 .vscode/

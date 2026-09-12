@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("chat", "server", "download", "doctor")]
+    [ValidateSet("chat", "server", "download", "doctor", "benchmark")]
     [string]$Mode = "chat",
 
     [string]$Model,
@@ -13,6 +13,7 @@ param(
     [ValidateRange(1, 65535)]
     [int]$Port = 8080,
     [string]$ListenAddress = "127.0.0.1",
+    [string]$ApiKey,
     [string]$ModelUrl,
     [switch]$Force,
     [switch]$NoGpu,
@@ -28,6 +29,7 @@ $ProjectRoot = Split-Path -Parent $PSCommandPath
 $ConfigPath = Join-Path $ProjectRoot "config/models.json"
 $ModelsDir = Join-Path $ProjectRoot "models"
 $RuntimeDir = Join-Path $ProjectRoot "runtime"
+$EvaluationScript = Join-Path $ProjectRoot "scripts/smoke-eval.ps1"
 
 function Write-Info([string]$Message) { Write-Host "[qwen-cpu] $Message" -ForegroundColor Cyan }
 function Stop-WithError([string]$Message) { throw "[qwen-cpu] $Message" }
@@ -61,6 +63,22 @@ function Get-AutoThreads {
     $logical = [Environment]::ProcessorCount
     # Keep one logical core free so the workstation remains responsive.
     return [Math]::Max(1, $logical - 1)
+}
+
+function Get-TotalMemoryGiB {
+    try {
+        $memory = (Get-CimInstance Win32_ComputerSystem -ErrorAction Stop).TotalPhysicalMemory
+        if ($memory -gt 0) { return [math]::Round($memory / 1GB, 1) }
+    } catch { }
+    return $null
+}
+
+function Get-DisplayAdapters {
+    try {
+        return @(Get-CimInstance Win32_VideoController -ErrorAction Stop | ForEach-Object Name)
+    } catch {
+        return @()
+    }
 }
 
 function Get-ConfiguredGpuLayers([object]$Preset) {
@@ -142,8 +160,17 @@ function Invoke-Doctor {
     Write-Host "llama-cli:       $(if ($cli) { $cli } else { 'MISSING' })"
     Write-Host "llama-server:    $(if ($server) { $server } else { 'MISSING' })"
     Write-Host "Logical CPUs:    $([Environment]::ProcessorCount)"
-    $gpu = Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
+    $memoryGiB = Get-TotalMemoryGiB
+    if ($null -ne $memoryGiB) { Write-Host "System memory:   $memoryGiB GiB" }
+    $gpu = Get-DisplayAdapters
     Write-Host "Display adapters: $(if ($gpu) { $gpu -join '; ' } else { 'not detected' })"
+    if ($null -eq $memoryGiB) {
+        Write-Host "Recommendation:  unable to determine memory; use qwen3-32b-q4 if Q6 does not fit." -ForegroundColor Yellow
+    } elseif ($memoryGiB -ge [double]$details.Preset.recommended_memory_gb) {
+        Write-Host "Recommendation:  $($details.Name) is appropriate for detected memory." -ForegroundColor Green
+    } else {
+        Write-Host "Recommendation:  use qwen3-32b-q4 or reduce context; $($details.Name) recommends $($details.Preset.recommended_memory_gb) GiB." -ForegroundColor Yellow
+    }
     if (-not $cli -or -not $server) {
         Write-Host "Install llama.cpp with .\scripts\install-llama-cpp.ps1" -ForegroundColor Yellow
     }
@@ -152,6 +179,11 @@ function Invoke-Doctor {
 $details = Get-ModelConfig
 if ($Mode -eq "doctor") { Invoke-Doctor; exit 0 }
 if ($Mode -eq "download") { [void](Get-ModelFile $details -AllowDownload); Write-Info "Download complete."; exit 0 }
+if ($Mode -eq "benchmark") {
+    if (-not (Test-Path -LiteralPath $EvaluationScript)) { Stop-WithError "Evaluation script was not found: $EvaluationScript" }
+    & $EvaluationScript
+    exit $LASTEXITCODE
+}
 
 $modelPath = Get-ModelFile $details
 $preset = $details.Preset
@@ -174,6 +206,7 @@ $commonArgs = @(
     "--repeat-penalty", "$($preset.repeat_penalty)"
 )
 $commonArgs += @("--reasoning", $reasoningMode)
+if ($ApiKey) { $commonArgs += @("--api-key", $ApiKey) }
 
 Write-Info "Preset: $($details.Name) | context: $effectiveContext | CPU threads: $effectiveThreads | GPU layers: $effectiveGpuLayers | reasoning: $reasoningMode"
 if ($Mode -eq "server") {

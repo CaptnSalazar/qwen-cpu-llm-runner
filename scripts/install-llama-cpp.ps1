@@ -2,7 +2,7 @@
 param(
     [ValidateSet("cpu", "cuda", "vulkan")]
     [string]$Backend = "cpu",
-    [string]$Version = "latest",
+    [string]$Version = "b10930",
     [switch]$Force
 )
 
@@ -26,6 +26,16 @@ function Save-RemoteFile([string]$Uri, [string]$Destination) {
     } finally {
         $client.Dispose()
     }
+}
+
+function Test-DownloadedAsset([string]$Path, [object]$Asset) {
+    $digestProperty = $Asset.PSObject.Properties["digest"]
+    if ($null -eq $digestProperty -or [string]::IsNullOrWhiteSpace($digestProperty.Value)) { return }
+    $expected = $digestProperty.Value -replace '^sha256:', ''
+    if ($expected -notmatch '^[a-fA-F0-9]{64}$') { Stop-WithError "Unsupported checksum format for $($Asset.name)." }
+    Write-Info "Verifying runtime SHA-256..."
+    $actual = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
+    if ($actual -ne $expected) { Stop-WithError "SHA-256 mismatch for $($Asset.name). Download was discarded." }
 }
 
 if ((Test-Path -LiteralPath $RuntimeDir) -and -not $Force) {
@@ -84,6 +94,7 @@ try {
     if (Test-Path -LiteralPath $stageDir) { Remove-Item -LiteralPath $stageDir -Recurse -Force }
     Write-Info "Downloading $($asset.name)..."
     Save-RemoteFile $asset.browser_download_url $tempZip
+    Test-DownloadedAsset $tempZip $asset
     New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
     Expand-Archive -LiteralPath $tempZip -DestinationPath $stageDir -Force
     if ($Backend -eq "cuda") {
@@ -94,6 +105,7 @@ try {
         if ($cudaRuntimeAsset) {
             Write-Info "Downloading bundled CUDA runtime DLLs..."
             Save-RemoteFile $cudaRuntimeAsset.browser_download_url $cudaRuntimeZip
+            Test-DownloadedAsset $cudaRuntimeZip $cudaRuntimeAsset
             Expand-Archive -LiteralPath $cudaRuntimeZip -DestinationPath $stageDir -Force
         } else {
             Write-Info "No bundled CUDA runtime archive was published; using the CUDA runtime installed on this PC."
