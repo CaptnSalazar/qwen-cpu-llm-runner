@@ -10,10 +10,10 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
 $RuntimeDir = Join-Path $ProjectRoot "runtime"
-$ApiHeaders = @{ "User-Agent" = "local-llm-runner-installer"; "Accept" = "application/vnd.github+json" }
+$ApiHeaders = @{ "User-Agent" = "qwen-cpu-llm-runner-installer"; "Accept" = "application/vnd.github+json" }
 
-function Write-Info([string]$Message) { Write-Host "[local-llm] $Message" -ForegroundColor Cyan }
-function Stop-WithError([string]$Message) { throw "[local-llm] $Message" }
+function Write-Info([string]$Message) { Write-Host "[qwen-cpu] $Message" -ForegroundColor Cyan }
+function Stop-WithError([string]$Message) { throw "[qwen-cpu] $Message" }
 
 function Save-RemoteFile([string]$Uri, [string]$Destination) {
     # WebClient streams directly to the destination. Unlike Invoke-WebRequest in
@@ -21,7 +21,7 @@ function Save-RemoteFile([string]$Uri, [string]$Destination) {
     # into a temporary file name, which can trigger PathTooLongException.
     $client = New-Object System.Net.WebClient
     try {
-        $client.Headers.Add("User-Agent", "local-llm-runner-installer")
+        $client.Headers.Add("User-Agent", "qwen-cpu-llm-runner-installer")
         $client.DownloadFile($Uri, $Destination)
     } finally {
         $client.Dispose()

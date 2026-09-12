@@ -29,15 +29,15 @@ $ConfigPath = Join-Path $ProjectRoot "config/models.json"
 $ModelsDir = Join-Path $ProjectRoot "models"
 $RuntimeDir = Join-Path $ProjectRoot "runtime"
 
-function Write-Info([string]$Message) { Write-Host "[local-llm] $Message" -ForegroundColor Cyan }
-function Stop-WithError([string]$Message) { throw "[local-llm] $Message" }
+function Write-Info([string]$Message) { Write-Host "[qwen-cpu] $Message" -ForegroundColor Cyan }
+function Stop-WithError([string]$Message) { throw "[qwen-cpu] $Message" }
 
 function Save-RemoteFile([string]$Uri, [string]$Destination) {
     # Direct streaming avoids a Windows PowerShell 5.1 path-length bug on long
     # signed redirects from large-file hosts such as GitHub and Hugging Face.
     $client = New-Object System.Net.WebClient
     try {
-        $client.Headers.Add("User-Agent", "local-llm-runner")
+        $client.Headers.Add("User-Agent", "qwen-cpu-llm-runner")
         $client.DownloadFile($Uri, $Destination)
     } finally {
         $client.Dispose()
@@ -121,7 +121,7 @@ function Get-ModelFile([object]$Details, [switch]$AllowDownload) {
     try {
         # BITS is robust for large Windows downloads. WebClient is used when BITS
         # is unavailable because Invoke-WebRequest has a path-length bug on some redirects.
-        Start-BitsTransfer -Source $downloadUrl -Destination $partialPath -DisplayName "Local LLM model: $($Details.Name)" -ErrorAction Stop
+        Start-BitsTransfer -Source $downloadUrl -Destination $partialPath -DisplayName "Qwen CPU model: $($Details.Name)" -ErrorAction Stop
     } catch {
         Write-Info "BITS was unavailable; using a direct streaming download."
         Save-RemoteFile $downloadUrl $partialPath
@@ -136,7 +136,7 @@ function Invoke-Doctor {
     $cli = Get-LlamaBinary "llama-cli"
     $server = Get-LlamaBinary "llama-server"
     $modelPath = Join-Path $ModelsDir $details.Preset.file
-    Write-Host "Local LLM Runner doctor" -ForegroundColor Green
+    Write-Host "Qwen CPU LLM Runner doctor" -ForegroundColor Green
     Write-Host "Preset:          $($details.Name)"
     Write-Host "Model present:   $(Test-Path -LiteralPath $modelPath) ($modelPath)"
     Write-Host "llama-cli:       $(if ($cli) { $cli } else { 'MISSING' })"
@@ -179,7 +179,7 @@ Write-Info "Preset: $($details.Name) | context: $effectiveContext | CPU threads:
 if ($Mode -eq "server") {
     $binary = Get-LlamaBinary "llama-server"
     if (-not $binary) { Stop-WithError "llama-server was not found. Run '.\scripts\install-llama-cpp.ps1' or add it to PATH." }
-    Write-Info "Starting local OpenAI-compatible API at http://${ListenAddress}:$Port"
+    Write-Info "Starting local chat-completions API at http://${ListenAddress}:$Port"
     Write-Info "Press Ctrl+C to stop."
     & $binary @commonArgs "--host", $ListenAddress, "--port", "$Port", "--jinja"
     exit $LASTEXITCODE

@@ -1,6 +1,6 @@
 # Qwen CPU LLM Runner
 
-A Windows-first, open-source launcher for running Qwen GGUF language models locally with [llama.cpp](https://github.com/ggml-org/llama.cpp). It installs a portable runtime, downloads verified weights, launches an OpenAI-compatible API, and includes a small reproducible latency smoke test.
+A Windows-first, open-source launcher for running Qwen GGUF language models locally with [llama.cpp](https://github.com/ggml-org/llama.cpp). It installs a portable runtime, downloads verified weights, launches a local chat-completions API, and includes a reproducible latency smoke test.
 
 **Privacy-first:** the model and inference server run on your PC. The installer and downloader access upstream releases only to fetch the runtime and model you choose.
 
@@ -8,7 +8,7 @@ A Windows-first, open-source launcher for running Qwen GGUF language models loca
 
 - Accuracy-first default: official Qwen3-32B Q6_K GGUF (26.9 GB).
 - CPU-only, CUDA, and Vulkan runtime installation.
-- Local OpenAI-compatible endpoint at `127.0.0.1:8080`.
+- Local chat-completions endpoint at `127.0.0.1:8080`.
 - SHA-256 model validation after download.
 - Direct-answer (`--reasoning off`) mode for low-overhead tasks.
 - Reproducible streaming latency and correctness smoke evaluation.
@@ -62,7 +62,7 @@ Single prompt:
 .\run.ps1 -Prompt "Explain database index trade-offs in three bullets."
 ```
 
-OpenAI-compatible local server:
+Local server:
 
 ```powershell
 .\run.ps1 -Mode server -Port 8080
