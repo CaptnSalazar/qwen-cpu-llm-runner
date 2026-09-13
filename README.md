@@ -2,9 +2,16 @@
 
 [![Validate](https://github.com/CaptnSalazar/qwen-cpu-llm-runner/actions/workflows/validate.yml/badge.svg)](https://github.com/CaptnSalazar/qwen-cpu-llm-runner/actions/workflows/validate.yml) [![License: MIT](https://img.shields.io/github/license/CaptnSalazar/qwen-cpu-llm-runner)](LICENSE) [![Issues](https://img.shields.io/github/issues/CaptnSalazar/qwen-cpu-llm-runner)](https://github.com/CaptnSalazar/qwen-cpu-llm-runner/issues)
 
-Run Qwen GGUF language models privately on Windows with CPU, CUDA, or Vulkan. This open-source launcher installs a portable [llama.cpp](https://github.com/ggml-org/llama.cpp) runtime, downloads verified weights, launches a local chat-completions API, and includes a reproducible latency smoke test.
+Run Qwen GGUF models locally on Windows with no cloud dependency. This launcher installs a portable [llama.cpp](https://github.com/ggml-org/llama.cpp) runtime, downloads verified model files, starts a local OpenAI-compatible API, and includes a quick latency smoke test.
 
-**Privacy-first:** the model and inference server run on your PC. The installer and downloader access upstream releases only to fetch the runtime and model you choose.
+**Privacy-first:** your model and inference server stay on your PC. The installer only reaches upstream release endpoints to fetch the runtime or model you selected.
+
+### Why this project
+
+- Run a 32B-class local model with CPU, CUDA, or Vulkan
+- Download only the preset you choose, with SHA-256 verification
+- Expose a local chat-completions endpoint at `http://127.0.0.1:8080`
+- Benchmark latency and direct-answer behavior on your hardware
 
 ## Contents
 
@@ -59,7 +66,7 @@ Run these from the repository root in PowerShell:
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
 .\scripts\install-llama-cpp.ps1 -Backend cpu
-\.\run.ps1 -Mode download -Model qwen3-32b-q4
+.\run.ps1 -Mode download -Model qwen3-32b-q4
 .\run.ps1
 ```
 
