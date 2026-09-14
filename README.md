@@ -55,7 +55,7 @@ flowchart LR
 ## Requirements
 
 - Windows 10/11 x64 and Windows PowerShell 5.1+ or PowerShell 7.
-- At least **32 GB free RAM** for the Q6 preset; 48 GB+ is more comfortable with a 16K context. Use Q4 on tighter systems.
+- Q4 needs roughly **22 GB RAM** before context and operating-system overhead; 28 GB is recommended. Q6 needs roughly **30 GB** before overhead; 40 GB is recommended, and 48 GB+ is more comfortable with a 16K context.
 - Roughly 30 GB of free disk for Q6, or 22 GB for Q4, plus runtime overhead.
 - Internet access only during installation/model download.
 
@@ -170,7 +170,7 @@ With a no-reasoning server already running, execute:
 .\scripts\smoke-eval.ps1
 ```
 
-The evaluator warms the model, sends three short direct-answer prompts with `temperature: 0`, streams responses, and reports first visible token time, total time, output, and exact-match correctness. Each completed run is stored as a timestamped JSON file in `benchmarks/` (ignored by Git). See [docs/evaluation.md](docs/evaluation.md) for methodology and the recorded baseline.
+The evaluator warms the model, sends three short direct-answer prompts with `temperature: 0`, streams responses, and reports first visible token time, total time, output, and exact-match correctness. Each completed run is stored as a timestamped JSON file in `benchmarks/` (ignored by Git). See [docs/evaluation.md](docs/evaluation.md) for methodology and [docs/performance.md](docs/performance.md) for hardware expectations and recorded reports.
 
 ### Measured CPU latency baseline
 
@@ -202,8 +202,10 @@ scripts/install-llama-cpp.ps1     Portable llama.cpp installer
 scripts/smoke-eval.ps1            Local direct-answer latency smoke evaluation
 benchmarks/                       Local timestamped evaluation reports (ignored by Git)
 docs/evaluation.md                Methodology and measured baseline
+docs/performance.md               Hardware guidance and performance reports
 tests/validate.ps1                Offline syntax and preset validation
 .github/workflows/validate.yml    GitHub Actions syntax/configuration validation
+.github/ISSUE_TEMPLATE/           Bug and performance report forms
 ```
 
 ## Contributing and security

@@ -1,0 +1,53 @@
+name: Performance report
+description: Share a reproducible latency or hardware result.
+title: "perf: "
+labels: [performance]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing a result. Please include all settings so it can be compared fairly with other reports.
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Hardware and operating system
+      description: Include Windows version, CPU, logical CPU count, RAM, GPU, and VRAM.
+      placeholder: |
+        Windows 11
+        CPU: ...
+        Logical CPUs: ...
+        RAM: ...
+        GPU / VRAM: CPU-only or ...
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Runner configuration
+      description: Include llama.cpp build, model preset, context size, threads, GPU layers, and reasoning mode.
+      placeholder: |
+        llama.cpp: b10930
+        Model: qwen3-32b-q4
+        Context: 8192
+        Threads: ...
+        GPU layers: ...
+        Reasoning: off
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results
+      description: Include pass count, median first-visible-token latency, median total latency, and command output or JSON report.
+      placeholder: |
+        Pass count: 3/3
+        Median first visible token: ...
+        Median total: ...
+        Report or output:
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Mention warm-up, background load, thermals, or anything else that affects the result.
